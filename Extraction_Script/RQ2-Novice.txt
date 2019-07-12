@@ -1,0 +1,34 @@
+create table #duplicateChild (PostId int, QuestionTitle nvarchar(max),AcceptedAns int, DupeNum int)
+insert #duplicateChild 
+
+select all
+  parentPost.Id [Post Link],
+  parentPost.Title [QuestionTitle],
+  parentPost.AcceptedAnswerId [AA],
+  count(childPost.Id) [Dupe Links]
+from Posts childPost
+inner join PostLinks childPL on 
+  childPost.Id = childPL.PostId and 
+  childPL.LinkTypeId = 3
+inner join Posts parentPost on 
+  childPL.RelatedPostId = parentPost.Id
+inner join PostTags parentPostTags on 
+  parentPost.Id = parentPostTags.PostId
+inner join Tags parentTag on 
+  parentPostTags.TagId = parentTag.Id and
+  parentTag.TagName = '##TargetTag##'
+INNER JOIN Users childUser ON 
+	childPost.OwnerUserId = childUser.Id 
+WHERE childPost.PostTypeId = 1 AND childUser.Reputation < 200
+group by parentPost.Id, parentPost.title,parentPost.AcceptedAnswerId
+order by [Dupe Links] desc
+
+select all
+  #duplicateChild.PostId,
+  #duplicateChild.QuestionTitle,
+  parentPost.Body,
+  #duplicateChild.DupeNum
+from #duplicateChild 
+inner join Posts parentPost on 
+    #duplicateChild.AcceptedAns = parentPost.Id
+order by #duplicateChild.DupeNum desc

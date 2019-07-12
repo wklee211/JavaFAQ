@@ -1,0 +1,101 @@
+create table #duplicateChild (PostId int, QuestionTitle nvarchar(max),AcceptedAns int, DupeNum int)
+insert #duplicateChild 
+
+select all
+  parentPost.Id [Post Link],
+  parentPost.Title [QuestionTitle],
+  parentPost.AcceptedAnswerId [AA],
+  count(childPost.Id) [Dupe Links]
+from Posts childPost
+inner join PostLinks childPL on 
+  childPost.Id = childPL.PostId and 
+  childPL.LinkTypeId = 3
+inner join Posts parentPost on 
+  childPL.RelatedPostId = parentPost.Id
+inner join PostTags parentPostTags on 
+  parentPost.Id = parentPostTags.PostId
+inner join Tags parentTag on 
+  parentPostTags.TagId = parentTag.Id and
+  parentTag.TagName = '##TargetTag##'
+INNER JOIN Users childUser ON 
+	childPost.OwnerUserId = childUser.Id 
+WHERE childPost.PostTypeId = 1 AND childUser.Reputation < 200
+group by parentPost.Id, parentPost.title,parentPost.AcceptedAnswerId
+order by [Dupe Links] desc
+
+create table #duplicateChild2 (PostId int, QuestionTitle nvarchar(max),AcceptedAns int, DupeNum int)
+insert #duplicateChild2 
+
+select all
+  parentPost.Id [Post Link],
+  parentPost.Title [QuestionTitle],
+  parentPost.AcceptedAnswerId [AA],
+  count(childPost.Id) [Dupe Links]
+from Posts childPost
+inner join PostLinks childPL on 
+  childPost.Id = childPL.PostId and 
+  childPL.LinkTypeId = 3
+inner join Posts parentPost on 
+  childPL.RelatedPostId = parentPost.Id
+inner join PostTags parentPostTags on 
+  parentPost.Id = parentPostTags.PostId
+inner join Tags parentTag on 
+  parentPostTags.TagId = parentTag.Id and
+  parentTag.TagName = '##TargetTag##'
+INNER JOIN Users childUser ON 
+	childPost.OwnerUserId = childUser.Id 
+WHERE childPost.PostTypeId = 1 AND childUser.Reputation BETWEEN 200 AND 10000
+group by parentPost.Id, parentPost.title,parentPost.AcceptedAnswerId
+order by [Dupe Links] desc
+
+create table #duplicateChild3 (PostId int, QuestionTitle nvarchar(max),AcceptedAns int, DupeNum int)
+insert #duplicateChild3 
+
+select all
+  parentPost.Id [Post Link],
+  parentPost.Title [QuestionTitle],
+  parentPost.AcceptedAnswerId [AA],
+  count(childPost.Id) [Dupe Links]
+from Posts childPost
+inner join PostLinks childPL on 
+  childPost.Id = childPL.PostId and 
+  childPL.LinkTypeId = 3
+inner join Posts parentPost on 
+  childPL.RelatedPostId = parentPost.Id
+inner join PostTags parentPostTags on 
+  parentPost.Id = parentPostTags.PostId
+inner join Tags parentTag on 
+  parentPostTags.TagId = parentTag.Id and
+  parentTag.TagName = '##TargetTag##'
+INNER JOIN Users childUser ON 
+	childPost.OwnerUserId = childUser.Id 
+WHERE childPost.PostTypeId = 1 AND childUser.Reputation > 10000
+group by parentPost.Id, parentPost.title,parentPost.AcceptedAnswerId
+order by [Dupe Links] desc
+
+select top ##TopItems##
+  parentPost.Id [Post Link],
+  count(childPost.Id) [Dupe Links],
+  parentPost.title,
+  a.DupeNum [Nov], b.DupeNum [Int], c.DupeNum [Exp]
+from Posts childPost
+inner join PostLinks childPL on 
+  childPost.Id = childPL.PostId and 
+  childPL.LinkTypeId = 3
+inner join Posts parentPost on 
+    childPL.RelatedPostId = parentPost.Id
+inner join PostTags parentPostTags on parentPost.Id = parentPostTags.PostId
+inner join Tags parentTag on 
+  parentPostTags.TagId = parentTag.Id and
+  parentTag.TagName = '##TargetTag##'
+INNER JOIN Users childUser ON 
+	childPost.OwnerUserId = childUser.Id
+FULL OUTER JOIN #duplicateChild a on
+  parentPost.Id = a.PostId
+FULL OUTER JOIN #duplicateChild2 b on 
+  parentPost.Id = b.PostId
+FULL OUTER JOIN #duplicateChild3 c on 
+  parentPost.Id = c.PostId
+WHERE childPost.PostTypeId = 1
+group by parentPost.Id, parentPost.title, a.DupeNum, b.DupeNum, c.DupeNum
+order by [Dupe Links] desc
